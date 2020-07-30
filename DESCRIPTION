@@ -1,7 +1,7 @@
-Package: fastAdaboost
+Package: fastAdaboost_DoD
 Type: Package
-Title: a Fast Implementation of Adaboost 
-Description: Implements Adaboost based on C++ backend code.
+Title: DoD Variant of fastAdaBoost
+Description: Based on Sourav Chatterjee's fastAdaboost. Implements Adaboost based on C++ backend code, redesigned for Data Oriented Design principles.
              This is blazingly fast and especially useful for large, in memory data sets. 
              The package uses decision trees as weak classifiers. Once the classifiers
              have been trained, they can be used to predict new data. 
@@ -9,12 +9,12 @@ Description: Implements Adaboost based on C++ backend code.
              The package implements the Adaboost.M1 algorithm and the real
              Adaboost(SAMME.R) algorithm.
 Version: 1.0.0
-Date: 2016-02-23
-Author: Sourav Chatterjee [aut, cre]
-Maintainer: Sourav Chatterjee <souravc83@gmail.com>
+Date: 2020-07-30
+Author: Will Robinson [aut, cre]
+Maintainer: Will Robinson <wgr@aber.ac.uk>
 License: MIT + file LICENSE
-URL: https://github.com/souravc83/fastAdaboost
-BugReports: https://github.com/souravc83/fastAdaboost/issues
+URL: https://github.com/atw-will/fastAdaboost
+BugReports: https://github.com/atw-will/fastAdaboost/issues
 Depends:
     R (>= 3.1.2)
 Imports:
