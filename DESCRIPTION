@@ -1,4 +1,4 @@
-Package: fastAdaboost_DoD
+Package: fastAdaboostDoD
 Type: Package
 Title: DoD Variant of fastAdaBoost
 Description: Based on Sourav Chatterjee's fastAdaboost. Implements Adaboost based on C++ backend code, redesigned for Data Oriented Design principles.
