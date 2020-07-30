@@ -1,4 +1,4 @@
-#' fastAdaboost: fast adaboost implementation for R
+#' fastAdaboostDoD: fast DoD adaboost implementation for R
 #' 
 #' fastAdaboost provides a blazingly fast implementation of both discrete 
 #' and real adaboost algorithms, based on a C++ backend. The goal of the 
@@ -26,8 +26,8 @@
 #'Zhu, Ji, et al. \dQuote{Multi-class adaboost} \emph{Ann Arbor} 1001.48109 (2006): 1612.
 #' @docType package
 #' @author Sourav Chatterjee
-#' @name fastAdaboost
+#' @name fastAdaboostDoD
 #' 
-#' @useDynLib fastAdaboost
+#' @useDynLib fastAdaboostDoD
 #' @importFrom Rcpp sourceCpp
 NULL
