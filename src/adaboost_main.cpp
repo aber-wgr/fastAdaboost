@@ -21,17 +21,27 @@ double calculate_error(IntegerVector dep_variable, IntegerVector tree_prediction
                        NumericVector weight_vec )
 {
   int dep_size = dep_variable.size();
-  int pred_size = tree_prediction.size();
-  int weight_size = weight_vec.size();
-  if(dep_size!=pred_size || pred_size!=weight_size)
-    stop("three vector sizes should be the same");
+  //int pred_size = tree_prediction.size();
+  //int weight_size = weight_vec.size();
+  //if(dep_size!=pred_size || pred_size!=weight_size)
+  //  stop("three vector sizes should be the same");
   
   double error = 0.;
+  /**
   for(int i=0;i<dep_size;i++)
   {
     if(dep_variable[i]!=tree_prediction[i])
       error+=weight_vec[i];
   }
+  */
+  
+  int mult;
+  for(int i=0;i<dep_size;i++)
+  {
+	  mult = (dep_variable[i] ^ tree_prediction[i]);
+	  error += mult * weight_vec[i];
+  }
+  
   return error;
   
 }
@@ -40,22 +50,21 @@ NumericVector update_weights(IntegerVector dep_variable, IntegerVector tree_pred
                              NumericVector weight_vec, double alpha)
 {
   int dep_size = dep_variable.size();
-  int pred_size = tree_prediction.size();
-  int weight_size = weight_vec.size();
-  if(dep_size!=pred_size || pred_size!=weight_size)
-    stop("three vector sizes should be the same");
+  //int pred_size = tree_prediction.size();
+  //int weight_size = weight_vec.size();
+  //if(dep_size!=pred_size || pred_size!=weight_size)
+  //  stop("three vector sizes should be the same");
   
   NumericVector updated_wt(clone(weight_vec));
   
-  for(int i=0;i<dep_size;i++)
-  {
-    if(dep_variable[i]!=tree_prediction[i])
-      updated_wt[i] = updated_wt[i]*exp(alpha);
-  }
+  int mult;
   double element_sum = 0.;
   for(int i=0;i<dep_size;i++)
-    element_sum +=updated_wt[i];
-  //Rcout<<element_sum<<std::endl;
+  {
+	if(dep_variable[i]!=tree_prediction[i])
+      updated_wt[i] = updated_wt[i]*exp(alpha);
+	element_sum +=updated_wt[i];
+  }
  
   for(int i=0;i<dep_size;i++)
     updated_wt[i] = updated_wt[i]/element_sum;

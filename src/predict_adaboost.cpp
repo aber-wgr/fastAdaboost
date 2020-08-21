@@ -57,10 +57,8 @@ List predict_adaboost_(List tree_list, NumericVector coeff_vector,
       class_vote = 0.;
       for(int k=0;k<nIter;k++)
       {
-        if(pred_mat(j,k)== i)
-          indicator = 1;
+		indicator = !((int)(pred_mat(j,k)) ^ i);
         class_vote += indicator*coeff_vector[k];
-        indicator = 0; //reset indicator variable
       }
       final_class(j,i)=class_vote;
     }
@@ -76,8 +74,10 @@ List predict_adaboost_(List tree_list, NumericVector coeff_vector,
     for(int j=0;j<num_classes;j++)
     {
       if(final_class(i,j)>max_val)
-        this_class = j;
-        max_val = final_class(i,j);
+      {  
+		this_class = j;
+		max_val = final_class(i,j); // bugged?
+	  }
     }
     predicted_class[i] = this_class;
   }
