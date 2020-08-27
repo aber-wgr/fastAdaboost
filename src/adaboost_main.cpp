@@ -5,7 +5,7 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 List call_rpart_(SEXP formula_obj, Function wrap_rpart, DataFrame newdata, 
-                  NumericVector weight_vec,SEXP classname_map) {
+                  std::vector<double> weight_vec,SEXP classname_map) {
    
    SEXP return_list = wrap_rpart(formula_obj, newdata, weight_vec,classname_map);
    List rcpp_return_list = as<List>(return_list);
@@ -17,8 +17,8 @@ List call_rpart_(SEXP formula_obj, Function wrap_rpart, DataFrame newdata,
 }
 
 //utility functions 
-double calculate_error(IntegerVector dep_variable, IntegerVector tree_prediction, 
-                       NumericVector weight_vec )
+double calculate_error(IntegerVector dep_variable, std::vector<int> tree_prediction, 
+                       std::vector<double> weight_vec )
 {
   int dep_size = dep_variable.size();
   //int pred_size = tree_prediction.size();
@@ -46,8 +46,9 @@ double calculate_error(IntegerVector dep_variable, IntegerVector tree_prediction
   
 }
 
-NumericVector update_weights(IntegerVector dep_variable, IntegerVector tree_prediction, 
-                             NumericVector weight_vec, double alpha)
+
+std::vector<double> update_weights(IntegerVector dep_variable, std::vector<int> tree_prediction, 
+                             std::vector<double> weight_vec, double alpha)
 {
   int dep_size = dep_variable.size();
   //int pred_size = tree_prediction.size();
@@ -55,7 +56,8 @@ NumericVector update_weights(IntegerVector dep_variable, IntegerVector tree_pred
   //if(dep_size!=pred_size || pred_size!=weight_size)
   //  stop("three vector sizes should be the same");
   
-  NumericVector updated_wt(clone(weight_vec));
+ //NumericVector updated_wt(clone(weight_vec));
+  std::vector<double> updated_wt(weight_vec);
   
   int mult;
   double element_sum = 0.;
@@ -92,9 +94,9 @@ IntegerVector convert_factor_to_int(IntegerVector factor_vec)
 // Zhu et. al. "Multi Class Adaboost", 2006
 //for K=2
 //https://web.stanford.edu/~hastie/Papers/samme.pdf
-NumericVector update_weights_real_ada(IntegerVector dep_variable, 
+std::vector<double> update_weights_real_ada(IntegerVector dep_variable, 
                                       NumericVector tree_real_pred, 
-                                      NumericVector weight_vec)
+                                      std::vector<double> weight_vec)
 {
   int num_examples = dep_variable.size();
   double eps= 1.e-5; //small number
@@ -107,7 +109,7 @@ NumericVector update_weights_real_ada(IntegerVector dep_variable,
       tree_real_pred[i] = 1.-eps;
   }
   
-  NumericVector updated_weight(clone(weight_vec));
+  std::vector<double> updated_weight(weight_vec);
   double exp_factor;
   int y_k[2] ={0,0} ;
   //can do away with y_k assignment, but used for clarity
@@ -145,29 +147,30 @@ NumericVector update_weights_real_ada(IntegerVector dep_variable,
 //This runs a single iteration or real adaboost
 //The weights are always 1 for real adaboost
 List real_boost_iteration(SEXP formula_obj, DataFrame data_df, IntegerVector vardep,
-                              NumericVector weight_numvec, 
+                              std::vector<double> weight_vec, 
                               Function wrap_rpart, SEXP classname_map)
 {
-  List rcpp_result = call_rpart_(formula_obj, wrap_rpart, data_df, weight_numvec, classname_map);
+  List rcpp_result = call_rpart_(formula_obj, wrap_rpart, data_df, weight_vec, classname_map);
   SEXP this_tree = rcpp_result["tree"];
   NumericVector tree_real_pred = as<NumericVector>(rcpp_result["prob"]);
   
   //the error prediction does not change
   //simply no. of incorrect answers, in SAMME.R too
-  IntegerVector tree_prediction = as<IntegerVector>(rcpp_result["pred"]);
-  double err = calculate_error(vardep, tree_prediction, weight_numvec);
+  //IntegerVector tree_prediction = as<IntegerVector>(rcpp_result["pred"]);
+  std::vector<int> tree_prediction = as<std::vector<int>>(rcpp_result["pred"]);
+  double err = calculate_error(vardep, tree_prediction, weight_vec);
   
   
   
   //no update weights if error is okay
   if(err<0.5 && err!=0)
-     weight_numvec =  update_weights_real_ada(vardep, tree_real_pred, weight_numvec);
+     weight_vec =  update_weights_real_ada(vardep, tree_real_pred, weight_vec);
   
   
   List boost_result;
   boost_result["tree"] = this_tree;
   boost_result["error"] = err;
-  boost_result["weight"] = weight_numvec;
+  boost_result["weight"] = weight_vec;
   boost_result["coeff"] = 1.; //coefficient 1 for real adaboost
   
   return boost_result;
@@ -178,14 +181,15 @@ List real_boost_iteration(SEXP formula_obj, DataFrame data_df, IntegerVector var
 // it updates the weight, calculates error and 
 // finds the coefficient alpha
 List discrete_boost_iteration(SEXP formula_obj, DataFrame data_df, IntegerVector vardep,
-                              NumericVector weight_numvec, 
+                              std::vector<double> weight_vec, 
                               Function wrap_rpart, SEXP classname_map)
 {
-  List rcpp_result = call_rpart_(formula_obj, wrap_rpart, data_df, weight_numvec, classname_map);
+  List rcpp_result = call_rpart_(formula_obj, wrap_rpart, data_df, weight_vec, classname_map);
   SEXP this_tree = rcpp_result["tree"];
   
-  IntegerVector tree_prediction = as<IntegerVector>(rcpp_result["pred"]);
-  double err = calculate_error(vardep, tree_prediction, weight_numvec);
+  //IntegerVector tree_prediction = as<IntegerVector>(rcpp_result["pred"]);
+  std::vector<int> tree_prediction = as<std::vector<int>>(rcpp_result["pred"]);
+  double err = calculate_error(vardep, tree_prediction, weight_vec);
   double alpha;
   
   if (err>0.5 || err == 0)
@@ -202,14 +206,14 @@ List discrete_boost_iteration(SEXP formula_obj, DataFrame data_df, IntegerVector
   else
   {
     alpha = 0.5*log((1.-err)/err);
-    weight_numvec =  update_weights(vardep, tree_prediction, weight_numvec, alpha);
+    weight_vec =  update_weights(vardep, tree_prediction, weight_vec, alpha);
   }
   
   
   List boost_result;
   boost_result["tree"] = this_tree;
   boost_result["error"] = err;
-  boost_result["weight"] = weight_numvec;
+  boost_result["weight"] = weight_vec;
   boost_result["coeff"] = alpha;
   
   return boost_result;
@@ -230,7 +234,8 @@ List adaboost_main_loop_(SEXP formula_obj, DataFrame data_df, int nIter, Functio
   // initialize weight vector
   double init_weight_val = 1./num_examples;
   std::vector<double> weight_vec(num_examples,init_weight_val);
-  NumericVector weight_numvec(weight_vec.begin(), weight_vec.end() );
+//  NumericVector weight_numvec(weight_vec.begin(), weight_vec.end() );
+  
   
   //initialize to avoid creation of variables in every loop
   IntegerVector tree_prediction;
@@ -241,12 +246,12 @@ List adaboost_main_loop_(SEXP formula_obj, DataFrame data_df, int nIter, Functio
   {
     if( boost_method == "M1")
     {
-      boost_result = discrete_boost_iteration(formula_obj, data_df, vardep, weight_numvec, 
+      boost_result = discrete_boost_iteration(formula_obj, data_df, vardep, weight_vec, 
                                              wrap_rpart, classname_map);
     }
     else
     {
-      boost_result = real_boost_iteration(formula_obj, data_df, vardep, weight_numvec, 
+      boost_result = real_boost_iteration(formula_obj, data_df, vardep, weight_vec, 
                                              wrap_rpart, classname_map);      
     }
     
@@ -268,7 +273,7 @@ List adaboost_main_loop_(SEXP formula_obj, DataFrame data_df, int nIter, Functio
       break;
     }
    
-    weight_numvec =  boost_result["weight"]; 
+    weight_vec =  as<std::vector<double>>(boost_result["weight"]); 
   }
 
   List adaboost_list;

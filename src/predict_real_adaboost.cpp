@@ -66,8 +66,10 @@ List predict_real_adaboost_(List tree_list, NumericVector coeff_vector,
     for(int j=0;j<num_classes;j++)
     {
       if(weighted_class_prob(i,j)>max_val)
-        this_class = j;
+      {  
+		this_class = j;
         max_val = weighted_class_prob(i,j);
+	  }
     }
     predicted_class[i] = this_class;
   }

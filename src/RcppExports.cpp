@@ -6,7 +6,7 @@
 using namespace Rcpp;
 
 // call_rpart_
-List call_rpart_(SEXP formula_obj, Function wrap_rpart, DataFrame newdata, NumericVector weight_vec, SEXP classname_map);
+List call_rpart_(SEXP formula_obj, Function wrap_rpart, DataFrame newdata, std::vector<double> weight_vec, SEXP classname_map);
 RcppExport SEXP _fastAdaboostDoD_call_rpart_(SEXP formula_objSEXP, SEXP wrap_rpartSEXP, SEXP newdataSEXP, SEXP weight_vecSEXP, SEXP classname_mapSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -14,7 +14,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type formula_obj(formula_objSEXP);
     Rcpp::traits::input_parameter< Function >::type wrap_rpart(wrap_rpartSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type newdata(newdataSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type weight_vec(weight_vecSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type weight_vec(weight_vecSEXP);
     Rcpp::traits::input_parameter< SEXP >::type classname_map(classname_mapSEXP);
     rcpp_result_gen = Rcpp::wrap(call_rpart_(formula_obj, wrap_rpart, newdata, weight_vec, classname_map));
     return rcpp_result_gen;
