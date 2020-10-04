@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <cstdlib>
 using namespace Rcpp;
 
 //NumericMatrix discrete_predict_matrix(Function wrap_rpart_predict, SEXP this_tree, 
@@ -33,40 +34,51 @@ List predict_adaboost_(List tree_list, NumericVector coeff_vector,
                         DataFrame newdata, int num_examples, Function wrap_rpart_predict,
                         SEXP classnames_map)
 {
-  int nIter = coeff_vector.size();
-  NumericMatrix pred_mat(num_examples, nIter);
 
-  
+
+  int nIter = coeff_vector.size();
+
+  size_t flat_pred_size = num_examples * nIter;
+
+  int* flat_pred = (int*)malloc(flat_pred_size * sizeof(int));
+
   for(int i =0;i<nIter;i++)
-  {  
+  {
+
     NumericVector predict_class = as<NumericVector>(wrap_rpart_predict(tree_list[i],
                                                                        newdata, classnames_map));
+
     for(int j=0;j<num_examples;j++)
-      pred_mat(j,i) = predict_class[j];
+	{
+        int location = i * nIter + j;
+		flat_pred[location] = (int)predict_class[j];
+	}
   }
+	
   //keep in mind multi-class
   int num_classes = 2;
   NumericMatrix final_class(num_examples, num_classes);
   int indicator = 0;
   double class_vote = 0.;
+
+
   for(int i=0;i<num_classes;i++)
   {
-    
     for(int j=0;j<num_examples;j++)
     {
       class_vote = 0.;
       for(int k=0;k<nIter;k++)
       {
-		indicator = !((int)(pred_mat(j,k)) ^ i);
+
+		indicator = !(flat_pred[k * nIter + j] ^ i);
         class_vote += indicator*coeff_vector[k];
       }
       final_class(j,i)=class_vote;
     }
   }
-  
-  
+
   NumericVector predicted_class(num_examples);
-  int this_class;
+  int this_class=0;
   int max_val;
   for(int i=0;i<num_examples;i++)
   {
@@ -81,7 +93,7 @@ List predict_adaboost_(List tree_list, NumericVector coeff_vector,
     }
     predicted_class[i] = this_class;
   }
-  
+
   NumericMatrix prob_mat(num_examples, num_classes);
   double row_sum = 0.;
   for(int i=0;i<num_examples;i++)
@@ -93,13 +105,13 @@ List predict_adaboost_(List tree_list, NumericVector coeff_vector,
     for(int j=0;j<num_classes;j++)
       prob_mat(i,j) = final_class(i,j)/row_sum;
   }
-  
+
+  free(flat_pred);
   
   List predict_object;
   predict_object["votes"] = final_class;
   predict_object["class"] = predicted_class;
   predict_object["prob"] = prob_mat;
-  
   return predict_object;
   
    
