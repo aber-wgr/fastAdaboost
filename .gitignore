@@ -3,3 +3,7 @@
 .RData
 .RHistory
 */*.tex
+/.vs
+/src/.vs
+/src-i386
+/src-x64

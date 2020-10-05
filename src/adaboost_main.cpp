@@ -38,8 +38,8 @@ double calculate_error(IntegerVector dep_variable, std::vector<int> tree_predict
   int mult;
   for(int i=0;i<dep_size;i++)
   {
-	  mult = (dep_variable[i] ^ tree_prediction[i]);
-	  error += mult * weight_vec[i];
+      if (dep_variable[i] != tree_prediction[i])
+          error += weight_vec[i];
   }
   
   return error;

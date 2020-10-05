@@ -69,9 +69,10 @@ List predict_adaboost_(List tree_list, NumericVector coeff_vector,
       class_vote = 0.;
       for(int k=0;k<nIter;k++)
       {
-
-		indicator = !(flat_pred[k * nIter + j] ^ i);
-        class_vote += indicator*coeff_vector[k];
+          if (flat_pred[k * nIter + j] == i)
+              indicator = 1;
+          class_vote += indicator * coeff_vector[k];
+          indicator = 0; //reset indicator variable
       }
       final_class(j,i)=class_vote;
     }
